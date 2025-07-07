@@ -1,11 +1,6 @@
 { config, pkgs, lib, ... }:
 
 {
-  # Home Manager needs a bit of information about you and the paths it should
-  # manage.
-  home.username = "brianmalinconico";
-  home.homeDirectory = "/Users/brianmalinconico";
-
   home.sessionPath = [
     "$HOME/bin"
     "$HOME/.bin"
@@ -44,7 +39,6 @@
     pkgs.lua # Required for Neovim / Lazy
     pkgs.luarocks # Required for Neovim / Lazy
 
-
     # # It is sometimes useful to fine-tune packages, for example, by applying
     # # overrides. You can do that directly here, just don't forget the
     # # parentheses. Maybe you want to install Nerd Fonts with a limited number of
@@ -72,10 +66,10 @@
     #   org.gradle.console=verbose
     #   org.gradle.daemon.idletimeout=3600000
     # '';
-    ".gitattributes".source = ./dotfiles/gitattributes;
-    ".p10k.zsh".source = ./dotfiles/p10k.zsh;
-    ".bin/dev" = { source = ./bin/dev.sh; executable = true; };
-    ".bin/git-clean-branches" = { source = ./bin/git-clean-branches.sh; executable = true; };
+    ".gitattributes".source = ../dotfiles/gitattributes;
+    ".p10k.zsh".source = ../dotfiles/p10k.zsh;
+    ".bin/dev" = { source = ../bin/dev.sh; executable = true; };
+    ".bin/git-clean-branches" = { source = ../bin/git-clean-branches.sh; executable = true; };
   };
 
   # Home Manager can also manage your environment variables through
@@ -181,7 +175,6 @@
   programs.git = {
     enable = true;
     userName  = "Brian Malinconico";
-    userEmail = "brian.malinconico@terminus.com";
 
     signing = {
       signByDefault = true;
@@ -244,6 +237,11 @@
     defaultEditor = true;
     withRuby = false;
   };
+
+  programs.eza = {
+    enable = true;
+    enableZshIntegration = true;
+  }
 
 # services.ssh-agent.enable = true;
 }
