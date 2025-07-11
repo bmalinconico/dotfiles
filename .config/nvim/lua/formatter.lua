@@ -19,8 +19,7 @@ Design Goals:
 - Avoid deprecated Neovim APIs (e.g., use `vim.lsp.get_clients()` instead of `get_active_clients()`).
 - Use `vim.ui.select()` for clean, extensible UI prompts. Compatible with built-in UI or plugins like dressing.nvim.
 - Easy extensibility:
-    - `filetype_formatters`: maps filetypes (or chosen types) to shell commands for full buffer formatting.
-    - `visual_formatters`: same as above, used during visual selection (can be the same table).
+  - `formatters`: maps filetypes (or chosen types) to shell commands for formatting. This table is used for both full buffer and visual selection formatting.
 - External formatters are shell commands that read from stdin and write to stdout.
 - Formatter commands must not require file paths; they operate on piped content.
 
@@ -36,13 +35,7 @@ Key Considerations:
 local M = {}
 
 -- External formatters fallback by filetype
-local filetype_formatters = {
-  json = "jq .",
-  sql = "pg_format",
-}
-
--- Visual selection formatters (prompt-based)
-local visual_formatters = {
+local formatters = {
   json = "jq .",
   sql = "pg_format",
 }
@@ -103,7 +96,7 @@ local function format_visual()
       return
     end
 
-    local cmd = visual_formatters[format_type]
+local cmd = formatters[format_type]
     if not cmd then
       print("No formatter defined for: " .. format_type)
       return
@@ -121,11 +114,11 @@ local function format_buffer()
   end
 
   local ft = vim.bo.filetype
-  local cmd = filetype_formatters[ft]
+local cmd = formatters[ft]
 
   if ft == "" or not cmd then
     prompt_format_type(function(format_type)
-      local fallback_cmd = filetype_formatters[format_type]
+local cmd = formatters[format_type]
       if fallback_cmd then
         format_buffer_with_cmd(fallback_cmd)
       else
