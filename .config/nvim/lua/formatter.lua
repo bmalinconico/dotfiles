@@ -65,9 +65,20 @@ end
 local function format_visual_with_cmd(cmd)
   local srow = vim.fn.line("'<") - 1
   local erow = vim.fn.line("'>")
+
+  vim.notify("Formatting selection from line " .. (srow) .. " to " .. erow, vim.log.levels.INFO)
+  if srow < 0 then
+    srow = 0
+  end
+
+  if erow <= 0 then
+    erow = 1
+  end
+
+  vim.notify("Formatting selection from line " .. (srow) .. " to " .. erow, vim.log.levels.INFO)
   local lines = vim.api.nvim_buf_get_lines(0, srow, erow, false)
   local input = table.concat(lines, "\n")
-  local result = vim.fn.systemlist(cmd, input)
+  local result = vim.fn.system(cmd, input)
   if vim.v.shell_error ~= 0 then
     vim.notify("Error formatting selection: " .. table.concat(result, "\n"), vim.log.levels.ERROR)
     return
@@ -75,6 +86,9 @@ local function format_visual_with_cmd(cmd)
 
   local formatted_lines = vim.split(result, "\n", { plain = true })
   vim.api.nvim_buf_set_lines(0, srow, erow, false, formatted_lines)
+
+  vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", false)
+
 end
 
 --- Prompt user using vim.ui.select for visual format type
