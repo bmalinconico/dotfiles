@@ -27,6 +27,8 @@
     pkgs.zsh-powerlevel10k
 
     pkgs.jq
+    pkgs.pgformatter
+
     pkgs.tree
     pkgs.wget
     pkgs.curl
@@ -104,6 +106,7 @@
       copper = "bundle exec rubocop -A && git commit -am 'Copper' && git push";
       rake = "noglob rake";
       clean-workspace = "find . -depth 3 -name .git -type d -exec bash -c \"cd {}/.. && git clean-branches && git gc\" \\;";
+      ls = "exa";
     };
 
     history = {
@@ -130,6 +133,9 @@
 
            # It seems TMUX is maintaining everything except the PATH from the env...
            export PATH="$HOME/.nix-profile/bin:$PATH"
+           if [ -f "$HOME/.secrets.env" ]; then
+             source "$HOME/.secrets.env"
+           fi
          ''
         )
     ];
@@ -241,7 +247,7 @@
   programs.eza = {
     enable = true;
     enableZshIntegration = true;
-  }
+  };
 
 # services.ssh-agent.enable = true;
 }

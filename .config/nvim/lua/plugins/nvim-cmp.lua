@@ -100,7 +100,7 @@ function M.config()
         end
       },
       -- { name = 'cmp_tabnine', group_index = 2 },
-      -- { name = "copilot", group_index = 2 },
+      { name = "copilot", group_index = 2 },
       { 
         name = 'buffer',
         group_index = 2,
@@ -116,13 +116,13 @@ function M.config()
   })
   
   -- Show/Hide copilot suggestion based when the cmp menu is visible
-  cmp.event:on("menu_opened", function()
-    vim.b.copilot_suggestion_hidden = true
-  end)
+  --cmp.event:on("menu_opened", function()
+  --  vim.b.copilot_suggestion_hidden = true
+  --end)
 
-  cmp.event:on("menu_closed", function()
-    vim.b.copilot_suggestion_hidden = false
-  end)
+  --cmp.event:on("menu_closed", function()
+  --  vim.b.copilot_suggestion_hidden = false
+  --end)
 
 
   vim.cmd [[

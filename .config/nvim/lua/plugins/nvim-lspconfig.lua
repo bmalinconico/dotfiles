@@ -49,6 +49,7 @@ function M.config()
     ts_ls = {},
     terraformls = {},
     regols = {},
+    basedpyright = {},
     angularls = {
       filetypes = { 'typescript', 'html', 'typescriptreact', 'typescript.tsx' },
       -- Check for angular.json since that is the root of the project.

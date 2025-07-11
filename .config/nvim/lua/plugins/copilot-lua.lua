@@ -3,6 +3,11 @@ local M = {
   enabled = true,
   "zbirenbaum/copilot.lua",
   event = "InsertEnter",
+  keys = {
+    { "<C-k>", function() require("copilot.suggestion").accept_word() end, mode = "i" },
+    { "<C-l>", function() require("copilot.suggestion").accept_line() end, mode = "i" },
+    { "<C-j>", function() require("copilot.suggestion").accept() end, mode = "i" },
+  },
 }
 
 function M.config()
@@ -14,7 +19,7 @@ function M.config()
     else
       copilot.setup({
         suggestion = {
-          eabled = true,
+          enabled = true,
           auto_trigger = true,
         }
       })

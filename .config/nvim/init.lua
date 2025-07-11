@@ -27,3 +27,4 @@ require("lazy").setup('plugins')
 
 require 'golang'
 require 'js_ts'
+require 'formatter'
