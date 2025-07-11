@@ -73,24 +73,17 @@ local function format_visual_with_cmd(cmd)
   vim.api.nvim_buf_set_lines(0, srow, erow, false, result)
 end
 
--- Format visual range using external command
+--- Prompt user using vim.ui.select for visual format type
+local function prompt_format_type(callback)
+  local options = vim.tbl_keys(formatters)
+  table.sort(options)
+  vim.ui.select(options, { prompt = "Select format type:" }, function(choice)
+    if not choice then
       callback(nil)
       return
     end
 
-    local selected_index = tonumber(choice:match("^(%d+)%."))
-    if selected_index then
-      callback(options[selected_index])
-      return
-    end
-
-    local input_type = choice:match("%s*(%S+)%s*")
-    if vim.tbl_contains(options, input_type) then
-      callback(input_type)
-    else
-      print("Invalid format type: " .. choice)
-      callback(nil)
-    end
+    callback(choice)
   end)
 end
 
@@ -102,7 +95,7 @@ local function format_visual()
       return
     end
 
-local cmd = formatters[format_type]
+    local cmd = formatters[format_type]
     if not cmd then
       print("No formatter defined for: " .. format_type)
       return
@@ -120,11 +113,11 @@ local function format_buffer()
   end
 
   local ft = vim.bo.filetype
-local cmd = formatters[ft]
+  local cmd = formatters[ft]
 
   if ft == "" or not cmd then
     prompt_format_type(function(format_type)
-local cmd = formatters[format_type]
+      local cmd = formatters[format_type]
       if fallback_cmd then
         format_buffer_with_cmd(fallback_cmd)
       else
