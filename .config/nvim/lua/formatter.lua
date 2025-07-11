@@ -12,7 +12,6 @@ depending on user context. The formatting behavior is:
 
 2. VISUAL MODE (selected range formatting):
    - Present a `vim.ui.select()` menu to choose the content type (e.g., json, sql, xml, etc.).
-   - Users can select the format type by either choosing the numeric option or typing the file type directly.
    - Pipe the selected lines through the matching external formatter command.
 
 Design Goals:
@@ -51,12 +50,15 @@ local function has_lsp_formatter()
 end
 
 local function format_buffer_with_cmd(cmd)
-  local result = vim.fn.systemlist(cmd)
+  local input = table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), "\n")
+  local result = vim.fn.system(cmd, input)
   if vim.v.shell_error ~= 0 then
     vim.notify("Error formatting buffer: " .. table.concat(result, "\n"), vim.log.levels.ERROR)
     return
   end
-  vim.api.nvim_buf_set_lines(0, 0, -1, false, result)
+
+  local lines = vim.split(result, "\n", { plain = true })
+  vim.api.nvim_buf_set_lines(0, 0, -1, false, lines)
 end
 
 -- Prompt user using vim.ui.select for visual format type
@@ -70,7 +72,9 @@ local function format_visual_with_cmd(cmd)
     vim.notify("Error formatting selection: " .. table.concat(result, "\n"), vim.log.levels.ERROR)
     return
   end
-  vim.api.nvim_buf_set_lines(0, srow, erow, false, result)
+
+  local formatted_lines = vim.split(result, "\n", { plain = true })
+  vim.api.nvim_buf_set_lines(0, srow, erow, false, formatted_lines)
 end
 
 --- Prompt user using vim.ui.select for visual format type
@@ -118,8 +122,8 @@ local function format_buffer()
   if ft == "" or not cmd then
     prompt_format_type(function(format_type)
       local cmd = formatters[format_type]
-      if fallback_cmd then
-        format_buffer_with_cmd(fallback_cmd)
+      if cmd then
+        format_buffer_with_cmd(cmd)
       else
         print("No formatter for selected type.")
       end
@@ -142,5 +146,6 @@ end
 
 -- Register the command
 vim.api.nvim_create_user_command("SmartFormat", M.smart_format, { range = true })
-
+vim.keymap.set("n", "af", "<Cmd>SmartFormat<CR>", { noremap = true, silent = true })
+vim.keymap.set("v", "af", "<Cmd>SmartFormat<CR>", { noremap = true, silent = true })
 return M

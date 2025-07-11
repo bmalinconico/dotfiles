@@ -8,7 +8,6 @@ local M = {
   { 'gh', '<Cmd>lua vim.lsp.buf.signature_help()<cr>', {noremap = true} },
   { 'gr', '<Cmd>lua vim.lsp.buf.rename()<cr>', {noremap = true} },
   { '<leader>e', '<Cmd>lua vim.diagnostic.open_float()<cr>', {noremap = true} },
-  { 'af', '<Cmd>lua vim.lsp.buf.format { async = true }<cr>', {noremap = true} },
   { 'ai', '<Cmd>lua vim.lsp.buf.code_action()<cr>', {noremap = true} },
  },
  dependencies = {
