@@ -50,24 +50,30 @@ local function has_lsp_formatter()
   return false
 end
 
--- Format buffer using external command
 local function format_buffer_with_cmd(cmd)
-  vim.cmd("silent %!" .. cmd)
-end
-
--- Format visual range using external command
-local function format_visual_with_cmd(cmd)
-  local srow = vim.fn.line("'<")
-  local erow = vim.fn.line("'>")
-  vim.cmd(string.format("silent %d,%d!%s", srow, erow, cmd))
+  local result = vim.fn.systemlist(cmd)
+  if vim.v.shell_error ~= 0 then
+    vim.notify("Error formatting buffer: " .. table.concat(result, "\n"), vim.log.levels.ERROR)
+    return
+  end
+  vim.api.nvim_buf_set_lines(0, 0, -1, false, result)
 end
 
 -- Prompt user using vim.ui.select for visual format type
-local function prompt_format_type(callback)
-  local options = vim.tbl_keys(visual_formatters)
-  table.sort(options)
-  vim.ui.select(options, { prompt = "Select format type:" }, function(choice)
-    if not choice then
+local function format_visual_with_cmd(cmd)
+  local srow = vim.fn.line("'<") - 1
+  local erow = vim.fn.line("'>")
+  local lines = vim.api.nvim_buf_get_lines(0, srow, erow, false)
+  local input = table.concat(lines, "\n")
+  local result = vim.fn.systemlist(cmd, input)
+  if vim.v.shell_error ~= 0 then
+    vim.notify("Error formatting selection: " .. table.concat(result, "\n"), vim.log.levels.ERROR)
+    return
+  end
+  vim.api.nvim_buf_set_lines(0, srow, erow, false, result)
+end
+
+-- Format visual range using external command
       callback(nil)
       return
     end
