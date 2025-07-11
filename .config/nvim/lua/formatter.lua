@@ -12,6 +12,7 @@ depending on user context. The formatting behavior is:
 
 2. VISUAL MODE (selected range formatting):
    - Present a `vim.ui.select()` menu to choose the content type (e.g., json, sql, xml, etc.).
+   - Users can select the format type by either choosing the numeric option or typing the file type directly.
    - Pipe the selected lines through the matching external formatter command.
 
 Design Goals:
