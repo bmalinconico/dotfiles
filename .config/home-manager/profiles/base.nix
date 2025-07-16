@@ -38,6 +38,8 @@
     pkgs.ripgrep
     pkgs.fd
 
+    pkgs.btop
+
     pkgs.lua # Required for Neovim / Lazy
     pkgs.luarocks # Required for Neovim / Lazy
 
