@@ -28,3 +28,6 @@ require("lazy").setup('plugins')
 require 'golang'
 require 'js_ts'
 require 'formatter'
+
+-- https://github.com/olimorris/codecompanion.nvim/issues/1804
+vim.loader.enable(false)

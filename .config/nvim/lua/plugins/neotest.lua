@@ -18,6 +18,7 @@ local M = {
     "nvim-neotest/nvim-nio",
     "nvim-lua/plenary.nvim",
     "nvim-neotest/neotest-plenary",
+    "nvim-neotest/neotest-python",
     "olimorris/neotest-rspec",
     'haydenmeade/neotest-jest',
     { "bmalinconico/vim-test", branch="enable_auto_continue" }
@@ -66,6 +67,7 @@ function M.config()
       open = false,
     },
     adapters = {
+      require("neotest-python"),
       require("neotest-plenary"),
       require("neotest-rspec"),
       require('neotest-jest')({
