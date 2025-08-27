@@ -41,8 +41,6 @@ function M.config()
             default_tools = {
               "mcp",
               "cmd_runner",
-              "file_search",
-
             }
           },
         }

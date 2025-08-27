@@ -33,6 +33,7 @@ function M.config()
     defaults = {
       file_ignore_patterns = {
         "vendor/.*",
+        "projects/research/.*",
         "sorbet/.*.rbi",
         -- In LUA % is the escape character
         "^documentation/lake%-front",

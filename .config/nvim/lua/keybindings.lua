@@ -34,6 +34,9 @@ augroup autoDebugger
   autocmd FileType ruby nnoremap <leader>pd yiwOputs <esc>p
   "autocmd FileType ruby inoremap <leader>pd <esc>yiwOputs <esc>p
 
+  "python
+  autocmd FileType python noremap <leader>d Obreakpoint();<esc>
+
   "typescript
   autocmd FileType typescript noremap <leader>d Odebugger;<esc>==
 "  autocmd FileType typescript inoremap <leader>d <esc>Odebugger;<esc>==i
