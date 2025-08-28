@@ -39,8 +39,11 @@ function M.config()
         tools = {
           opts = {
             default_tools = {
-              "mcp",
+              "filesystem",
               "cmd_runner",
+              "neovim",
+              "memory",
+              "aws_docs",
             }
           },
         }

@@ -1,5 +1,8 @@
 { config, pkgs, lib, ... }:
 
+let
+  extraNodePackages = import ~/.config/nixpkgs/node/default.nix { inherit pkgs; };
+in
 {
   home.sessionPath = [
     "$HOME/bin"
@@ -42,6 +45,11 @@
 
     pkgs.lua # Required for Neovim / Lazy
     pkgs.luarocks # Required for Neovim / Lazy
+
+    pkgs.iosevka # Font for terminal and editor
+    pkgs.nerd-fonts.iosevka # Font for terminal and editor
+
+    extraNodePackages.mcp-hub
 
     # # It is sometimes useful to fine-tune packages, for example, by applying
     # # overrides. You can do that directly here, just don't forget the
@@ -249,6 +257,12 @@
   programs.eza = {
     enable = true;
     enableZshIntegration = true;
+  };
+
+  programs.direnv = {
+    enable = true;
+    enableZshIntegration = true;
+    silent = true;
   };
 
 # services.ssh-agent.enable = true;
