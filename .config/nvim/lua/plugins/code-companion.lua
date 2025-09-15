@@ -44,6 +44,8 @@ function M.config()
               "neovim",
               "memory",
               "aws_docs",
+              "sequentialthinking__sequentialthinking",
+              "memory",
             }
           },
         }

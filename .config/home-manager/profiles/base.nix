@@ -50,6 +50,7 @@ in
     pkgs.nerd-fonts.iosevka # Font for terminal and editor
 
     extraNodePackages.mcp-hub
+    # extraNodePackages."@google/gemini-cli"
 
     # # It is sometimes useful to fine-tune packages, for example, by applying
     # # overrides. You can do that directly here, just don't forget the
@@ -127,7 +128,7 @@ in
     oh-my-zsh = {
       enable = true;
       theme = "robbyrussell"; # or "robbyrussell", or whatever theme you prefer
-      plugins = [ "git" "sudo" ]; # add any plugins you like
+      plugins = [ "git" ]; # add any plugins you like
     };
 
     initContent = lib.mkMerge [
@@ -160,9 +161,9 @@ in
 
     terminal = "screen-256color";
     extraConfig = ''
-      set-option -sa terminal-features ',xterm-kitty:RGB'
+      set-option -sa terminal-features ',xterm-kitty:RGB,xterm-kitty:bracketed-paste'
       set-option -g focus-events on
-      set -sg escape-time 0
+      set -sg escape-time 20
 
       bind | split-window -h
       bind - split-window -v
