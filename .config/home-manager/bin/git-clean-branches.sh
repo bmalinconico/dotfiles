@@ -1,19 +1,64 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# --- git-clean-branches (Interactive) ---
-# Deletes local branches that have been merged into a target branch.
-# By default, it only auto-deletes fully merged branches and lists the rest.
-# With the -i or --interactive flag, it interactively reviews other branches.
+# --- 1. Documentation & Help ---
+print_help() {
+cat << EOF
+A tool for cleaning and maintaining local git branches.
 
-# --- 1. Argument Parsing ---
+USAGE:
+  ./git-clean-branches.sh [options] [target_branch]
+
+DESCRIPTION:
+  This script finds local branches that have been merged into a target branch
+  (e.g., main or master) and helps you clean them up. It operates in one of
+  three modes.
+
+MODES:
+  Report (default)
+    Automatically deletes fully merged branches, then prints a list of all
+    remaining branches that could not be safely removed.
+
+  Interactive (-i, --interactive)
+    After auto-deleting merged branches, this mode prompts you to decide the
+    fate of each remaining branch with the following options:
+      [R]emove:      Force-delete the branch.
+      [K]eep:        Do nothing and keep the branch.
+      [V]iew diff:   Show the changes unique to this branch.
+      [G]raph log:   Show the git commit graph for this branch and the target.
+
+  Update (--update)
+    After auto-deleting merged branches, this mode attempts to automatically
+    rebase each remaining branch on top of the target branch. It will only
+    succeed if the rebase is clean (no conflicts).
+
+OPTIONS:
+  [target_branch]       Optional. The branch to compare against. If omitted, the
+                        script will try to auto-detect 'main' or 'master'.
+  -i, --interactive     Enables Interactive Mode. Cannot be used with --update.
+  --update              Enables Update Mode. Cannot be used with -i.
+  -h, --help            Prints this help message and exits.
+
+EOF
+}
+
+# --- 2. Argument Parsing ---
 INTERACTIVE_MODE=false
+UPDATE_MODE=false
 POSITIONAL_ARGS=()
 
 while [[ $# -gt 0 ]]; do
   case $1 in
+    -h|--help)
+      print_help
+      exit 0
+      ;;
     -i|--interactive)
       INTERACTIVE_MODE=true
+      shift # past argument
+      ;;
+    --update)
+      UPDATE_MODE=true
       shift # past argument
       ;;
     *)
@@ -26,8 +71,15 @@ done
 # Restore positional arguments
 set -- "${POSITIONAL_ARGS[@]}"
 
+# Validate flags
+if [ "$INTERACTIVE_MODE" = true ] && [ "$UPDATE_MODE" = true ]; then
+  echo "Error: --interactive (-i) and --update flags cannot be used together." >&2
+  print_help
+  exit 1
+fi
 
-# --- 2. Setup ---
+
+# --- 3. Setup ---
 # Remember where we started so we can return at the end.
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 echo "Current branch is '$CURRENT_BRANCH'. Will return here when done."
@@ -62,13 +114,13 @@ if [ "$CURRENT_BRANCH" != "$TARGET_BRANCH" ]; then
   git checkout -q "$TARGET_BRANCH"
 fi
 
-# --- 3. Update & Prune ---
+# --- 4. Update & Prune ---
 echo "Fetching latest changes and pruning stale remote-tracking branches..."
 git fetch --prune origin
 echo "Updating local target branch '$TARGET_BRANCH' to match its remote..."
 git reset --hard "origin/$TARGET_BRANCH"
 
-# --- 4. Automatic Cleanup of Fully Merged Branches ---
+# --- 5. Automatic Cleanup of Fully Merged Branches ---
 echo
 echo "--- Pass 1: Automatically cleaning fully merged branches ---"
 MERGED_BRANCHES=$(git branch --merged "$TARGET_BRANCH" | grep -vE "^\*|master|main|develop|${TARGET_BRANCH}$" | tr -d ' *' || true)
@@ -81,71 +133,79 @@ else
   echo "No fully merged branches to clean automatically."
 fi
 
-# --- 5. Review Remaining Branches (Interactive or Report) ---
+# --- 6. Process Remaining Branches (Report, Interactive, or Update) ---
 echo
-echo "--- Pass 2: Reviewing remaining branches ---"
+echo "--- Pass 2: Processing remaining branches ---"
 
-# Collect all branches into a bash array
+# Collect all branches that were not deleted in Pass 1
 all_branches=()
 while IFS= read -r b; do all_branches+=("$b"); done < <(git for-each-ref refs/heads/ "--format=%(refname:short)")
 
-branches_to_review=()
+branches_to_process=()
 for branch in "${all_branches[@]}"; do
-  # Check if branch still exists (wasn't deleted in Pass 1)
-  if ! git show-ref --verify --quiet "refs/heads/$branch"; then
-    continue
-  fi
-
-  # Check against protected patterns
-  if [[ "$branch" =~ ^(master|main|develop)$ ]] || [ "$branch" == "$TARGET_BRANCH" ]; then
-    continue
-  fi
-
-  branches_to_review+=("$branch")
+  if ! git show-ref --verify --quiet "refs/heads/$branch"; then continue; fi # Skip if already deleted
+  if [[ "$branch" =~ ^(master|main|develop)$ ]] || [ "$branch" == "$TARGET_BRANCH" ]; then continue; fi # Skip protected
+  branches_to_process+=("$branch")
 done
 
 
-if [ ${#branches_to_review[@]} -eq 0 ]; then
-  echo "No remaining branches to review."
+if [ ${#branches_to_process[@]} -eq 0 ]; then
+  echo "No remaining branches to process."
 else
-  # If in interactive mode, loop and ask. Otherwise, just report.
-  if [ "$INTERACTIVE_MODE" = true ]; then
-    echo "The following branches will be reviewed interactively: ${branches_to_review[*]}"
-    for branch in "${branches_to_review[@]}"; do
-      while true; do # Loop indefinitely until a decision (Remove/Keep) is made.
-        read -p $'Branch \e[33m'"$branch"$'\e[0m: [R]emove, [K]eep, or [V]iew diff? ' -n 1 -r choice
-        echo # Move to a new line
+  # --- UPDATE MODE --- 
+  if [ "$UPDATE_MODE" = true ]; then
+    echo "Attempting to cleanly rebase branches onto '$TARGET_BRANCH'...";
+    for branch in "${branches_to_process[@]}"; do
+      echo -n " - Processing branch '$branch': "
 
+      set +e # Temporarily disable exit on error to catch rebase failure
+      REBASE_OUTPUT=$(git checkout -q "$branch" 2>&1 && git rebase "$TARGET_BRANCH" 2>&1)
+      REBASE_EXIT_CODE=$?
+      set -e # Re-enable
+
+      if [ $REBASE_EXIT_CODE -eq 0 ]; then
+        echo -e "\e[32mSuccess\e[0m"
+      else
+        echo -e "\e[33mFailed (conflicts)\e[0m"
+        git rebase --abort >/dev/null 2>&1
+      fi
+      git checkout -q "$TARGET_BRANCH" # Ensure we are back on target for the next loop
+    done
+  # --- INTERACTIVE MODE --- 
+  elif [ "$INTERACTIVE_MODE" = true ]; then
+    echo "The following branches will be reviewed interactively: ${branches_to_process[*]}"
+    for branch in "${branches_to_process[@]}"; do
+      while true; do
+        read -p $'Branch \e[33m'"$branch"$'\e[0m: [R]emove, [K]eep, [V]iew diff, or [G]raph log? ' -n 1 -r choice
+        echo
         case "$choice" in
-          r|R)
-            echo -e " -> \e[31mDeleting\e[0m branch '$branch'."
-            git branch -D "$branch"
-            break # Exit the loop for this branch and move to the next.
-            ;;
-          k|K)
-            echo -e " -> \e[32mKeeping\e[0m branch '$branch'."
-            break # Exit the loop for this branch and move to the next.
-            ;;
+          r|R) echo -e " -> \e[31mDeleting\e[0m branch '$branch'."; git branch -D "$branch"; break ;; 
+          k|K) echo -e " -> \e[32mKeeping\e[0m branch '$branch'."; break ;;
           v|V)
-            echo " -> Showing diff for '$branch' from its divergence point..."
-            MERGE_BASE=$(git merge-base "$TARGET_BRANCH" "$branch")
-            git diff --patch-with-stat --color=always "$MERGE_BASE..$branch" | less -R
+            echo " -> Showing changes on '$branch' that are not in '$TARGET_BRANCH'..."
+            git log -p --color=always "$TARGET_BRANCH".."$branch" | less -R
+            ;;
+          g|G)
+            echo " -> Showing graph of commits on '$branch' ahead of '$TARGET_BRANCH'..."
+            git log --graph --oneline --decorate --color=always "$TARGET_BRANCH..$branch" | less -R
             ;;
           *)
-            echo "Invalid choice. Please enter 'R', 'K', or 'V'."
+            echo "Invalid choice."
             ;;
         esac
       done
     done
+  # --- REPORT MODE (DEFAULT) --- 
   else
     echo "The following branches were not automatically removable:"
-    printf " - %s\n" "${branches_to_review[@]}"
+    printf " - %s\n" "${branches_to_process[@]}"
     echo
     echo "To review them one by one, run this script again with the -i or --interactive flag."
+    echo "To attempt to update them automatically, run with the --update flag."
   fi
 fi
 
-# --- 6. Finish ---
+# --- 7. Finish ---
 echo
 echo "--- Cleanup complete ---"
 echo "Returning to the original branch '$CURRENT_BRANCH'..."
