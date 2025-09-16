@@ -22,10 +22,11 @@ MODES:
   Interactive (-i, --interactive)
     After auto-deleting merged branches, this mode prompts you to decide the
     fate of each remaining branch with the following options:
-      [R]emove:      Force-delete the branch.
-      [K]eep:        Do nothing and keep the branch.
-      [V]iew diff:   Show the changes unique to this branch.
-      [G]raph log:   Show the git commit graph for this branch and the target.
+      [R]emove:        Force-delete the branch.
+      [K]eep:          Do nothing and keep the branch.
+      [V]iew patches:  Show the changes for each unique commit on the branch (uses 'git log -p').
+      [S]ummary diff:  Show a single collapsed diff between the branch tip and target tip (uses 'git diff').
+      [G]raph log:     Show a graph of the unique commits on the branch (uses 'git log --graph').
 
   Update (--update)
     After auto-deleting merged branches, this mode attempts to automatically
@@ -154,7 +155,7 @@ if [ ${#branches_to_process[@]} -eq 0 ]; then
 else
   # --- UPDATE MODE --- 
   if [ "$UPDATE_MODE" = true ]; then
-    echo "Attempting to cleanly rebase branches onto '$TARGET_BRANCH'...";
+    echo "Attempting to cleanly rebase branches onto '$TARGET_BRANCH'..."
     for branch in "${branches_to_process[@]}"; do
       echo -n " - Processing branch '$branch': "
 
@@ -176,18 +177,24 @@ else
     echo "The following branches will be reviewed interactively: ${branches_to_process[*]}"
     for branch in "${branches_to_process[@]}"; do
       while true; do
-        read -p $'Branch \e[33m'"$branch"$'\e[0m: [R]emove, [K]eep, [V]iew diff, or [G]raph log? ' -n 1 -r choice
+        # Use echo -e -n for a more portable colored prompt
+        echo -e -n 'Branch \e[33m'"$branch"'\e[0m: [R]emove, [K]eep, [V]iew patches, [S]ummary diff, or [G]raph log? '
+        read -n 1 -r choice
         echo
         case "$choice" in
-          r|R) echo -e " -> \e[31mDeleting\e[0m branch '$branch'."; git branch -D "$branch"; break ;; 
+          r|R) echo -e " -> \e[31mDeleting\e[0m branch '$branch'."; git branch -D "$branch"; break ;;
           k|K) echo -e " -> \e[32mKeeping\e[0m branch '$branch'."; break ;;
           v|V)
-            echo " -> Showing changes on '$branch' that are not in '$TARGET_BRANCH'..."
-            git log -p --color=always "$TARGET_BRANCH".."$branch" | less -R
+            echo " -> Showing patches for each commit on '$branch' ahead of '$TARGET_BRANCH'..."
+            git log -p --color=always "$TARGET_BRANCH..$branch" | less -R || true
+            ;;
+          s|S)
+            echo " -> Showing summary diff between tips of '$TARGET_BRANCH' and '$branch'..."
+            git diff --patch-with-stat --color=always "$TARGET_BRANCH..$branch" | less -R || true
             ;;
           g|G)
             echo " -> Showing graph of commits on '$branch' ahead of '$TARGET_BRANCH'..."
-            git log --graph --oneline --decorate --color=always "$TARGET_BRANCH..$branch" | less -R
+            git log --graph --oneline --decorate --color=always "$TARGET_BRANCH..$branch" | less -R || true
             ;;
           *)
             echo "Invalid choice."
