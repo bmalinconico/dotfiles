@@ -1,4 +1,6 @@
 [
   "mcp-hub",
-  "@google/gemini-cli"
+  "@google/gemini-cli",
+  "@github/copilot",
+  "@anthropic-ai/claude-code"
 ]

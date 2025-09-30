@@ -2,8 +2,11 @@
 
 let
   extraNodePackages = import ~/.config/nixpkgs/node/default.nix { inherit pkgs; };
+  # vectorCode = builtins.getFlake (toString ../../nixpkgs/vectorcode-mcp);
 in
 {
+  nixpkgs.config.allowUnfree = true;
+
   home.sessionPath = [
     "$HOME/bin"
     "$HOME/.bin"
@@ -21,8 +24,8 @@ in
   # The home.packages option allows you to install Nix packages into your
   # environment.
   home.packages = [
-    # # Adds the 'hello' command to your environment. It prints a friendly
-    # # "Hello, world!" when run.
+    # vectorCode.packages.${pkgs.system}.default
+
     pkgs.silver-searcher
  #   pkgs.git
     pkgs.devbox
@@ -43,13 +46,20 @@ in
 
     pkgs.btop
 
+    pkgs.awscli
+
     pkgs.lua # Required for Neovim / Lazy
     pkgs.luarocks # Required for Neovim / Lazy
 
     pkgs.iosevka # Font for terminal and editor
     pkgs.nerd-fonts.iosevka # Font for terminal and editor
 
+    # pkgs.claude-code
+
     extraNodePackages.mcp-hub
+    extraNodePackages."@github/copilot"
+    extraNodePackages."@anthropic-ai/claude-code"
+
     # extraNodePackages."@google/gemini-cli"
 
     # # It is sometimes useful to fine-tune packages, for example, by applying

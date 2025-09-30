@@ -5,6 +5,8 @@ local M = {
   dependencies = {
     "nvim-lua/plenary.nvim",
     "nvim-treesitter/nvim-treesitter",
+    "olimorris/codecompanion.nvim",
+    "ravitemer/codecompanion-history.nvim",
   },
 }
 
@@ -16,8 +18,13 @@ function M.config()
     return
   end
 
+  -- https://github.com/olimorris/codecompanion.nvim/issues/1804
+  -- Disable here because something somewhere is turning it on
+  vim.loader.enable(false)
+
   codecompanion.setup({
     extensions = {
+      history = { enabled = true },
       mcphub = {
         callback = "mcphub.extensions.codecompanion",
         opts = {
@@ -39,7 +46,8 @@ function M.config()
         tools = {
           opts = {
             default_tools = {
-              "filesystem",
+              -- "filesystem",
+              "files",
               "cmd_runner",
               "neovim",
               "memory",

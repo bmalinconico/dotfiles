@@ -2,6 +2,7 @@ require 'settings.options'
 require 'settings.spelling'
 require 'keybindings'
 
+
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.loop.fs_stat(lazypath) then
   vim.fn.system({
@@ -28,6 +29,3 @@ require("lazy").setup('plugins')
 require 'golang'
 require 'js_ts'
 require 'formatter'
-
--- https://github.com/olimorris/codecompanion.nvim/issues/1804
-vim.loader.enable(false)
