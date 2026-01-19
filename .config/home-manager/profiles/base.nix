@@ -54,11 +54,19 @@ in
     pkgs.iosevka # Font for terminal and editor
     pkgs.nerd-fonts.iosevka # Font for terminal and editor
 
+    pkgs.python312Packages.notebook
+
     # pkgs.claude-code
 
     extraNodePackages.mcp-hub
     extraNodePackages."@github/copilot"
+    extraNodePackages."@google/gemini-cli"
     extraNodePackages."@anthropic-ai/claude-code"
+
+    pkgs.bubblewrap
+    pkgs.socat
+
+    pkgs.gh
 
     # extraNodePackages."@google/gemini-cli"
 
