@@ -5,6 +5,8 @@ let
   # vectorCode = builtins.getFlake (toString ../../nixpkgs/vectorcode-mcp);
 in
 {
+  imports = [ ./plannotator.nix ];
+
   nixpkgs.config.allowUnfree = true;
 
   home.sessionPath = [
@@ -60,7 +62,6 @@ in
 
     extraNodePackages.mcp-hub
     extraNodePackages."@github/copilot"
-    extraNodePackages."@google/gemini-cli"
     extraNodePackages."@anthropic-ai/claude-code"
 
     pkgs.bubblewrap
